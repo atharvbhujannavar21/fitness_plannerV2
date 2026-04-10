@@ -1,0 +1,12 @@
+node_modules/
+.svelte-kit/
+dist/
+build/
+.env
+.venv/
+__pycache__/
+*.pyc
+frontend/.env
+backend/.env
+backend/grpc/fitness_pb2.py
+backend/grpc/fitness_pb2_grpc.py

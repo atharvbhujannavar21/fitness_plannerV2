@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package fitfusion;
+
+message UserProfile {
+  string id = 1;
+  string name = 2;
+  int32 age = 3;
+  double weight = 4;
+  double height = 5;
+  string goal = 6;
+  string created_at = 7;
+}
+
+message ChatHistoryItem {
+  string role = 1;
+  string content = 2;
+  string timestamp = 3;
+}
+
+message ChatRequest {
+  UserProfile profile = 1;
+  repeated ChatHistoryItem history = 2;
+  string message = 3;
+}
+
+message ChatResponse {
+  string reply = 1;
+}
+
+message Task {
+  string id = 1;
+  string profile_id = 2;
+  string title = 3;
+  string description = 4;
+  string category = 5;
+  string date = 6;
+  bool generated_by_ai = 7;
+  string plan_scope = 8;
+}
+
+message PlanResponse {
+  string summary = 1;
+  repeated Task tasks = 2;
+}
+
+message PlanGenerateRequest {
+  UserProfile profile = 1;
+  int32 year = 2;
+  int32 month = 3;
+}
+
+message UserID {
+  string id = 1;
+}
+
+message TaskList {
+  repeated Task tasks = 1;
+}
+
+message TaskResponse {
+  Task task = 1;
+}
+
+service AIService {
+  rpc GeneratePlan(PlanGenerateRequest) returns (PlanResponse);
+  rpc Chat(ChatRequest) returns (ChatResponse);
+}
+
+service CalendarService {
+  rpc GetTasks(UserID) returns (TaskList);
+  rpc AddTask(Task) returns (TaskResponse);
+}
