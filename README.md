@@ -5,7 +5,7 @@ Production-style fitness tracking app with a SvelteKit frontend, FastAPI backend
 ## Stack
 
 - Frontend: SvelteKit, TailwindCSS
-- Backend: FastAPI, gRPC, PyMongo
+- Backend: FastAPI, gRPC
 - AI: Groq Chat Completions API with LLaMA
 - Database: Local MongoDB
 
