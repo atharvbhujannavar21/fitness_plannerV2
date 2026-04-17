@@ -79,13 +79,13 @@ FitFusion currently uses a partially agentic design: the chatbot provides intell
 
 ## Tech Stack
 
-| Layer | Technology | Purpose |
-| --- | --- | --- |
-| Frontend | SvelteKit, TailwindCSS, TypeScript, Vite | UI rendering and client interaction |
-| Backend | Python, FastAPI, Pydantic | REST API, business logic, service orchestration |
-| AI | Groq Chat Completions, LLaMA 3 8B Instant | Generative plan creation and conversational assistant |
-| Database | MongoDB, PyMongo | Persistent storage for profiles and tasks |
-| Communication | REST, gRPC | API and service integration |
+| Layer         | Technology                                | Purpose                                               |
+| ------------- | ----------------------------------------- | ----------------------------------------------------- |
+| Frontend      | SvelteKit, TailwindCSS, TypeScript, Vite  | UI rendering and client interaction                   |
+| Backend       | Python, FastAPI, Pydantic                 | REST API, business logic, service orchestration       |
+| AI            | Groq Chat Completions, LLaMA 3 8B Instant | Generative plan creation and conversational assistant |
+| Database      | MongoDB, PyMongo                          | Persistent storage for profiles and tasks             |
+| Communication | REST, gRPC                                | API and service integration                           |
 
 ## Folder Structure
 
@@ -213,4 +213,3 @@ FitFusion demonstrates a polished full-stack fitness planner that bridges modern
 ## License
 
 This project is provided as-is for demonstration and education purposes.
-₹₹`
