@@ -213,3 +213,4 @@ FitFusion demonstrates a polished full-stack fitness planner that bridges modern
 ## License
 
 This project is provided as-is for demonstration and education purposes.
+₹₹`
