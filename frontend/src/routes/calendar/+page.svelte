@@ -86,8 +86,6 @@
       month: viewDate.getMonth() + 1,
     });
     tasks.set(await api.getTasks($selectedProfile.id));
-    selectedDate = null;
-    selectedDayOpen = false;
     status = result.summary;
   }
 
