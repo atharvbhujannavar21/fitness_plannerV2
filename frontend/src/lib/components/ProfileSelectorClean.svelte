@@ -121,20 +121,12 @@
 
 <section class="min-h-screen px-4 py-10 md:px-10">
   <div class="mx-auto max-w-6xl rounded-[2rem] border border-white/10 bg-[#0c0d10]/90 p-6 shadow-glow backdrop-blur md:p-10">
-    <div class="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-      <div>
-        <p class="text-sm uppercase tracking-[0.4em] text-amber-200/60">FitFusion</p>
-        <h1 class="font-display text-4xl font-bold md:text-6xl">Choose your training profile</h1>
-        <p class="mt-3 max-w-2xl text-sm text-stone-400 md:text-base">
-          Local-only fitness profiles with a Netflix-inspired selector, AI coaching, workout planning, and diet tracking.
-        </p>
-      </div>
-      <button
-        class="rounded-full bg-ember px-5 py-3 font-semibold text-black transition hover:scale-[1.02]"
-        on:click={openCreate}
-      >
-        Add Profile
-      </button>
+    <div class="mb-10">
+      <p class="text-sm uppercase tracking-[0.4em] text-amber-200/60">FitFusion</p>
+      <h1 class="font-display text-4xl font-bold md:text-6xl">Choose your training profile</h1>
+      <p class="mt-3 max-w-2xl text-sm text-stone-400 md:text-base">
+        Local-only fitness profiles with a Netflix-inspired selector, AI coaching, workout planning, and diet tracking.
+      </p>
     </div>
 
     {#if error}
