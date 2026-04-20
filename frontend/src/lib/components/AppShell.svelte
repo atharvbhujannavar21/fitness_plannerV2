@@ -15,9 +15,9 @@
 </script>
 
 <div class="min-h-screen p-4 md:p-6">
-  <div class="mx-auto grid max-w-[1600px] gap-4 md:grid-cols-[96px_1fr]">
+  <div class="mx-auto grid max-w-[1600px] items-start gap-4 md:grid-cols-[96px_minmax(0,1fr)]">
     <Sidebar />
-    <div class="space-y-4">
+    <div class="min-w-0 space-y-4">
       <Navbar {title} />
       <slot />
     </div>

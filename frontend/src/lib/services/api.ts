@@ -1,5 +1,5 @@
 import { PUBLIC_API_BASE_URL } from '$env/static/public';
-import type { ChatMessage, Profile, TaskItem } from '$lib/types';
+import { normalizeProfile, type ChatMessage, type Profile, type ProfileInput, type TaskItem } from '$lib/types';
 
 const API_BASE = PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
@@ -21,11 +21,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getProfiles: () => request<Profile[]>('/profiles'),
-  createProfile: (body: Omit<Profile, 'id' | 'created_at'>) =>
-    request<Profile>('/profiles', { method: 'POST', body: JSON.stringify(body) }),
-  updateProfile: (id: string, body: Omit<Profile, 'id' | 'created_at'>) =>
-    request<Profile>(`/profiles/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  getProfiles: async () => (await request<Profile[]>('/profiles')).map((profile) => normalizeProfile(profile) as Profile),
+  createProfile: async (body: ProfileInput) =>
+    normalizeProfile(await request<Profile>('/profiles', { method: 'POST', body: JSON.stringify(body) })) as Profile,
+  updateProfile: async (id: string, body: ProfileInput) =>
+    normalizeProfile(await request<Profile>(`/profiles/${id}`, { method: 'PUT', body: JSON.stringify(body) })) as Profile,
   deleteProfile: (id: string) => request<{ status: string }>(`/profiles/${id}`, { method: 'DELETE' }),
   getTasks: (profileId: string) => request<TaskItem[]>(`/tasks/${profileId}`),
   addTask: (body: Omit<TaskItem, 'id'>) => request<TaskItem>('/tasks', { method: 'POST', body: JSON.stringify(body) }),

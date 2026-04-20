@@ -1,4 +1,5 @@
-<script lang="ts">
+<script>
+  import { tick } from 'svelte';
   import { chatHistory } from '$lib/stores/chat';
   import { selectedProfile } from '$lib/stores/profile';
   import { api } from '$lib/services/api';
@@ -6,12 +7,20 @@
   let message = '';
   let loading = false;
   let error = '';
+  let messagesContainer = null;
+
+  async function scrollToLatest() {
+    await tick();
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }
 
   async function sendMessage() {
     if (!message.trim() || !$selectedProfile) return;
 
     const userMessage = {
-      role: 'user' as const,
+      role: 'user',
       content: message.trim(),
       timestamp: new Date().toISOString()
     };
@@ -33,15 +42,20 @@
           timestamp: new Date().toISOString()
         }
       ]);
+      await scrollToLatest();
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unable to reach the AI coach.';
     } finally {
       loading = false;
     }
   }
+
+  $: if ($chatHistory.length) {
+    scrollToLatest();
+  }
 </script>
 
-<section class="glass-panel flex h-full flex-col rounded-[2rem]">
+<section class="glass-panel flex h-[70vh] min-h-[620px] max-h-[820px] flex-col rounded-[2rem] xl:h-[calc(100vh-8.5rem)]">
   <div class="rounded-t-[2rem] bg-ember px-6 py-5 text-black">
     <p class="text-sm font-semibold uppercase tracking-[0.3em]">AI Coach</p>
     <h2 class="font-display text-3xl">Chat with your fitness guide</h2>
@@ -50,7 +64,7 @@
     </p>
   </div>
 
-  <div class="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+  <div bind:this={messagesContainer} class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5">
     {#if !$chatHistory.length}
       <div class="rounded-2xl border border-dashed border-white/10 p-4 text-sm text-stone-400">
         Ask about workouts, recovery, meal timing, protein intake, cardio, or strength progression.

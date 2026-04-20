@@ -3,21 +3,15 @@
   import { onMount } from 'svelte';
   import { api } from '$lib/services/api';
   import { selectedProfile } from '$lib/stores/profile';
+  import { defaultProfileValues, normalizeMedicalConditions } from '$lib/types';
 
-  const emptyForm = {
-    name: '',
-    age: 21,
-    weight: 70,
-    height: 175,
-    goal: 'muscle_gain'
-  };
-
+  const medicalConditionOptions = ['diabetes', 'hypertension', 'thyroid', 'none'];
   let profiles = [];
   let showModal = false;
   let editing = null;
   let loading = true;
   let error = '';
-  let form = { ...emptyForm };
+  let form = { ...defaultProfileValues };
 
   async function loadProfiles() {
     loading = true;
@@ -32,9 +26,13 @@
     }
   }
 
+  function resetForm() {
+    form = { ...defaultProfileValues, medicalConditions: [...defaultProfileValues.medicalConditions] };
+  }
+
   function openCreate() {
     editing = null;
-    form = { ...emptyForm };
+    resetForm();
     showModal = true;
   }
 
@@ -45,17 +43,51 @@
       age: profile.age,
       weight: profile.weight,
       height: profile.height,
-      goal: profile.goal
+      goal: profile.goal,
+      dietPreference: profile.dietPreference,
+      dailyWaterIntake: profile.dailyWaterIntake,
+      dietaryGoal: profile.dietaryGoal,
+      medicalConditions: [...profile.medicalConditions],
+      injuriesOrLimitations: profile.injuriesOrLimitations,
+      workoutHoursPerDay: profile.workoutHoursPerDay,
+      workoutDaysPerWeek: profile.workoutDaysPerWeek,
+      preferredWorkoutTime: profile.preferredWorkoutTime,
+      fitnessLevel: profile.fitnessLevel,
+      activityLevel: profile.activityLevel,
+      sleepHours: profile.sleepHours,
+      stressLevel: profile.stressLevel
     };
     showModal = true;
   }
 
+  function toggleMedicalCondition(condition) {
+    const next = new Set(form.medicalConditions);
+
+    if (condition === 'none') {
+      form.medicalConditions = ['none'];
+      return;
+    }
+
+    next.delete('none');
+    if (next.has(condition)) {
+      next.delete(condition);
+    } else {
+      next.add(condition);
+    }
+
+    form.medicalConditions = normalizeMedicalConditions(Array.from(next));
+  }
+
   async function saveProfile() {
     error = '';
+    form.medicalConditions = normalizeMedicalConditions(form.medicalConditions);
 
     try {
       if (editing) {
-        await api.updateProfile(editing.id, form);
+        const updated = await api.updateProfile(editing.id, form);
+        if ($selectedProfile?.id === updated.id) {
+          selectedProfile.set(updated);
+        }
       } else {
         await api.createProfile(form);
       }
@@ -70,6 +102,9 @@
   async function removeProfile(id) {
     try {
       await api.deleteProfile(id);
+      if ($selectedProfile?.id === id) {
+        selectedProfile.clear();
+      }
       await loadProfiles();
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unable to delete profile.';
@@ -94,6 +129,12 @@
           Local-only fitness profiles with a Netflix-inspired selector, AI coaching, workout planning, and diet tracking.
         </p>
       </div>
+      <button
+        class="rounded-full bg-ember px-5 py-3 font-semibold text-black transition hover:scale-[1.02]"
+        on:click={openCreate}
+      >
+        Add Profile
+      </button>
     </div>
 
     {#if error}
@@ -115,7 +156,8 @@
               <div class="mt-4 flex flex-wrap gap-2 text-xs text-stone-300">
                 <span class="rounded-full bg-white/5 px-3 py-1">{profile.age} yrs</span>
                 <span class="rounded-full bg-white/5 px-3 py-1">{profile.weight} kg</span>
-                <span class="rounded-full bg-white/5 px-3 py-1">{profile.height} cm</span>
+                <span class="rounded-full bg-white/5 px-3 py-1">{profile.activityLevel}</span>
+                <span class="rounded-full bg-white/5 px-3 py-1">{profile.dietPreference}</span>
               </div>
               <div class="mt-5 flex flex-wrap gap-2">
                 <button
@@ -154,8 +196,8 @@
 </section>
 
 {#if showModal}
-  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
-    <div class="glass-panel w-full max-w-xl rounded-[2rem] p-6">
+  <div class="fixed inset-0 z-40 overflow-y-auto bg-black/70 p-4">
+    <div class="mx-auto w-full max-w-5xl glass-panel rounded-[2rem] p-6">
       <div class="mb-6 flex items-center justify-between">
         <div>
           <h3 class="font-display text-3xl">{editing ? 'Edit profile' : 'Create profile'}</h3>
@@ -164,31 +206,151 @@
         <button class="text-2xl text-stone-400" on:click={() => (showModal = false)}>x</button>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
-        <label class="flex flex-col gap-2 text-sm">
-          Name
-          <input bind:value={form.name} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
-        </label>
-        <label class="flex flex-col gap-2 text-sm">
-          Age
-          <input bind:value={form.age} type="number" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
-        </label>
-        <label class="flex flex-col gap-2 text-sm">
-          Weight (kg)
-          <input bind:value={form.weight} type="number" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
-        </label>
-        <label class="flex flex-col gap-2 text-sm">
-          Height (cm)
-          <input bind:value={form.height} type="number" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
-        </label>
-        <label class="flex flex-col gap-2 text-sm md:col-span-2">
-          Goal
-          <select bind:value={form.goal} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
-            <option value="fat_loss">Fat Loss</option>
-            <option value="muscle_gain">Muscle Gain</option>
-            <option value="maintenance">Maintenance</option>
-          </select>
-        </label>
+      <div class="space-y-8">
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Basics</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2 text-sm">
+              Name
+              <input bind:value={form.name} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Age
+              <input bind:value={form.age} type="number" min="1" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Weight (kg)
+              <input bind:value={form.weight} type="number" min="1" step="0.1" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Height (cm)
+              <input bind:value={form.height} type="number" min="1" step="0.1" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm md:col-span-2">
+              Goal
+              <select bind:value={form.goal} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="fat_loss">Fat Loss</option>
+                <option value="muscle_gain">Muscle Gain</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Diet & Nutrition</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2 text-sm">
+              Diet Preference
+              <select bind:value={form.dietPreference} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="veg">Veg</option>
+                <option value="non-veg">Non-Veg</option>
+                <option value="vegan">Vegan</option>
+                <option value="eggetarian">Eggetarian</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Daily Water Intake (liters)
+              <input bind:value={form.dailyWaterIntake} type="number" min="0" step="0.1" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm md:col-span-2">
+              Dietary Goal
+              <select bind:value={form.dietaryGoal} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="weight-loss">Weight Loss</option>
+                <option value="muscle-gain">Muscle Gain</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Health</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div class="md:col-span-2">
+              <p class="text-sm text-stone-200">Medical Conditions</p>
+              <div class="mt-3 flex flex-wrap gap-3">
+                {#each medicalConditionOptions as condition}
+                  <label class="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={form.medicalConditions.includes(condition)}
+                      on:change={() => toggleMedicalCondition(condition)}
+                    />
+                    <span class="capitalize">{condition}</span>
+                  </label>
+                {/each}
+              </div>
+            </div>
+            <label class="flex flex-col gap-2 text-sm md:col-span-2">
+              Injuries or Limitations
+              <textarea bind:value={form.injuriesOrLimitations} rows="3" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Workout Planning</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2 text-sm">
+              Workout Hours Per Day
+              <input bind:value={form.workoutHoursPerDay} type="number" min="0.5" max="3" step="0.5" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Workout Days Per Week
+              <input bind:value={form.workoutDaysPerWeek} type="number" min="1" max="7" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm md:col-span-2">
+              Preferred Workout Time
+              <select bind:value={form.preferredWorkoutTime} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Fitness Profile</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2 text-sm">
+              Fitness Level
+              <select bind:value={form.fitnessLevel} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Activity Level
+              <select bind:value={form.activityLevel} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="sedentary">Sedentary</option>
+                <option value="light">Light</option>
+                <option value="moderate">Moderate</option>
+                <option value="active">Active</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="text-sm uppercase tracking-[0.3em] text-amber-200/60">Lifestyle</h4>
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <label class="flex flex-col gap-2 text-sm">
+              Sleep Hours
+              <input bind:value={form.sleepHours} type="number" min="0" max="24" step="0.5" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none" />
+            </label>
+            <label class="flex flex-col gap-2 text-sm">
+              Stress Level
+              <select bind:value={form.stressLevel} class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none">
+                <option value="low">Low</option>
+                <option value="moderate">Moderate</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div class="mt-6 flex justify-end gap-3">

@@ -20,6 +20,6 @@
   </div>
 
   <div class="mt-6 h-3 rounded-full bg-white/5">
-    <div class="h-full rounded-full bg-gradient-to-r from-[#ffb566] to-[#ff8c00]" style={`width: ${Math.min((bmi / 35) * 100, 100)}%`} />
+    <div class="h-full rounded-full bg-gradient-to-r from-[#ffb566] to-[#ff8c00]" style={`width: ${Math.min((bmi / 35) * 100, 100)}%`}></div>
   </div>
 </div>

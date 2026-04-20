@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div class="min-h-[720px]">
+      <div class="min-w-0 xl:sticky xl:top-6 xl:self-start">
         <ChatbotPanel />
       </div>
     </div>
