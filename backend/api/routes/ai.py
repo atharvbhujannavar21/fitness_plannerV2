@@ -11,6 +11,30 @@ router = APIRouter()
 grpc_client = GRPCClient()
 calendar_service = CalendarDomainService()
 
+
+def _profile_payload(profile: dict) -> dict:
+    return {
+        "id": profile["id"],
+        "name": profile["name"],
+        "age": profile["age"],
+        "weight": profile["weight"],
+        "height": profile["height"],
+        "goal": profile["goal"],
+        "created_at": profile["created_at"],
+        "diet_preference": profile["dietPreference"],
+        "daily_water_intake": profile["dailyWaterIntake"],
+        "dietary_goal": profile["dietaryGoal"],
+        "medical_conditions": profile["medicalConditions"],
+        "injuries_or_limitations": profile["injuriesOrLimitations"],
+        "workout_hours_per_day": profile["workoutHoursPerDay"],
+        "workout_days_per_week": profile["workoutDaysPerWeek"],
+        "preferred_workout_time": profile["preferredWorkoutTime"],
+        "fitness_level": profile["fitnessLevel"],
+        "activity_level": profile["activityLevel"],
+        "sleep_hours": profile["sleepHours"],
+        "stress_level": profile["stressLevel"],
+    }
+
 def _month_bounds(year: int, month: int) -> tuple[datetime, datetime]:
     start = datetime(year, month, 1, tzinfo=UTC)
     if month == 12:
@@ -23,19 +47,7 @@ def _month_bounds(year: int, month: int) -> tuple[datetime, datetime]:
 @router.post("/generate-plan", response_model=PlanResponseModel)
 async def generate_plan(payload: PlanGenerateRequestModel):
     profile = payload.profile
-    response = await grpc_client.generate_plan(
-        {
-            "id": profile["id"],
-            "name": profile["name"],
-            "age": profile["age"],
-            "weight": profile["weight"],
-            "height": profile["height"],
-            "goal": profile["goal"],
-            "created_at": profile["created_at"],
-        },
-        year=payload.year or 0,
-        month=payload.month or 0,
-    )
+    response = await grpc_client.generate_plan(_profile_payload(profile), year=payload.year or 0, month=payload.month or 0)
 
     start_date = None
     end_date = None
@@ -66,15 +78,7 @@ async def generate_plan(payload: PlanGenerateRequestModel):
 @router.post("/chat", response_model=ChatResponseModel)
 async def chat(payload: ChatRequestModel):
     response = await grpc_client.chat(
-        {
-            "id": payload.profile["id"],
-            "name": payload.profile["name"],
-            "age": payload.profile["age"],
-            "weight": payload.profile["weight"],
-            "height": payload.profile["height"],
-            "goal": payload.profile["goal"],
-            "created_at": payload.profile["created_at"],
-        },
+        _profile_payload(payload.profile),
         [
             {
                 "role": item.role,

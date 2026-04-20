@@ -15,7 +15,7 @@
   }
 </script>
 
-<aside class="glass-panel flex h-full w-full flex-col rounded-[2rem] p-4 md:max-w-[96px]">
+<aside class="glass-panel flex w-full flex-col rounded-[2rem] p-4 md:sticky md:top-6 md:h-[calc(100vh-3rem)] md:w-[96px] md:self-start">
   <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-ember text-xl font-bold text-black">+</div>
 
   <nav class="flex flex-1 flex-col gap-3">

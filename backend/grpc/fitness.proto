@@ -10,6 +10,18 @@ message UserProfile {
   double height = 5;
   string goal = 6;
   string created_at = 7;
+  string diet_preference = 8;
+  double daily_water_intake = 9;
+  string dietary_goal = 10;
+  repeated string medical_conditions = 11;
+  string injuries_or_limitations = 12;
+  double workout_hours_per_day = 13;
+  int32 workout_days_per_week = 14;
+  string preferred_workout_time = 15;
+  string fitness_level = 16;
+  string activity_level = 17;
+  double sleep_hours = 18;
+  string stress_level = 19;
 }
 
 message ChatHistoryItem {

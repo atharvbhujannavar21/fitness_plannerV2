@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from api.database import get_tasks_collection
 from models.tasks import TaskCreate
-from services.serializers import serialize_task
+from services.serializers import as_object_id, serialize_task
 
 
 class CalendarDomainService:
@@ -24,6 +24,25 @@ class CalendarDomainService:
         document = self.collection.find_one({"_id": result.inserted_id})
         return serialize_task(document)
 
+    def delete_task(self, task_id: str) -> dict | None:
+        try:
+            task_oid = as_object_id(task_id)
+        except Exception:
+            return None
+        document = self.collection.find_one_and_delete({"_id": task_oid})
+        return serialize_task(document) if document else None
+
+    def get_tasks_by_date(self, profile_id: str, target_date: datetime) -> list[dict]:
+        start = datetime(target_date.year, target_date.month, target_date.day, tzinfo=UTC)
+        end = start + timedelta(days=1)
+        documents = self.collection.find(
+            {
+                "profile_id": profile_id,
+                "date": {"$gte": start, "$lt": end}
+            }
+        ).sort("date", 1)
+        return [serialize_task(document) for document in documents]
+
     def replace_generated_tasks(
         self,
         profile_id: str,
@@ -42,3 +61,7 @@ class CalendarDomainService:
         for task in tasks:
             saved_tasks.append(self.add_task(task))
         return saved_tasks
+
+    def clear_tasks(self, profile_id: str) -> int:
+        result = self.collection.delete_many({"profile_id": profile_id})
+        return result.deleted_count
