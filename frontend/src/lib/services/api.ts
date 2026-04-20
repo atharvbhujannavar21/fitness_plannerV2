@@ -29,6 +29,13 @@ export const api = {
   deleteProfile: (id: string) => request<{ status: string }>(`/profiles/${id}`, { method: 'DELETE' }),
   getTasks: (profileId: string) => request<TaskItem[]>(`/tasks/${profileId}`),
   addTask: (body: Omit<TaskItem, 'id'>) => request<TaskItem>('/tasks', { method: 'POST', body: JSON.stringify(body) }),
+  deleteTask: (taskId: string) => request<TaskItem>(`/tasks/${taskId}`, { method: 'DELETE' }),
+  clearTasks: (profileId: string) => request<{ deleted: number }>(`/tasks/profile/${profileId}`, { method: 'DELETE' }),
+  regenerateDay: (profile: Profile, date: string) =>
+    request<TaskItem[]>('/tasks/regenerate-day', {
+      method: 'POST',
+      body: JSON.stringify({ profile, date })
+    }),
   generatePlan: (profile: Profile, options?: { year?: number; month?: number }) =>
     request<{ summary: string; tasks: TaskItem[] }>('/generate-plan', {
       method: 'POST',
