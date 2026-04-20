@@ -36,6 +36,14 @@ def clear_profile_tasks(profile_id: str):
     return {"deleted": deleted_count}
 
 
+@router.delete("/tasks/profile/{profile_id}/generated/{plan_scope}")
+def clear_generated_profile_tasks(profile_id: str, plan_scope: str):
+    if plan_scope not in {"weekly", "monthly"}:
+        raise HTTPException(status_code=400, detail="Unsupported plan scope")
+    deleted_count = calendar_service.clear_generated_tasks_by_scope(profile_id, plan_scope)
+    return {"deleted": deleted_count}
+
+
 @router.post("/tasks/regenerate-day", response_model=list[Task])
 async def regenerate_day(payload: DayRegenerateRequestModel):
     target_date = payload.date

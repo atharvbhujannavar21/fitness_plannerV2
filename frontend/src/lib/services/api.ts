@@ -31,6 +31,8 @@ export const api = {
   addTask: (body: Omit<TaskItem, 'id'>) => request<TaskItem>('/tasks', { method: 'POST', body: JSON.stringify(body) }),
   deleteTask: (taskId: string) => request<TaskItem>(`/tasks/${taskId}`, { method: 'DELETE' }),
   clearTasks: (profileId: string) => request<{ deleted: number }>(`/tasks/profile/${profileId}`, { method: 'DELETE' }),
+  clearGeneratedTasks: (profileId: string, planScope: 'weekly' | 'monthly') =>
+    request<{ deleted: number }>(`/tasks/profile/${profileId}/generated/${planScope}`, { method: 'DELETE' }),
   regenerateDay: (profile: Profile, date: string) =>
     request<TaskItem[]>('/tasks/regenerate-day', {
       method: 'POST',

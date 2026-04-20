@@ -102,17 +102,26 @@ class GroqAIService:
         tasks: list[TaskCreate] = []
         plan_scope = "monthly" if is_monthly else "weekly"
         for item in parsed["tasks"]:
-            description = item["description"]
+            title = self._coerce_text(
+                item.get("title"),
+                self._default_task_title(item.get("category")),
+            )
+            description = self._coerce_text(
+                item.get("description"),
+                self._default_task_description(profile, item.get("category")),
+            )
             if len(description) > 1000:
                 description = description[:997].rstrip() + "..."
+            category = self._normalize_task_category(item.get("category"), title, description)
+            task_date = self._parse_task_date(item.get("date"), start_dt)
 
             tasks.append(
                 TaskCreate(
                     profile_id=profile.id,
-                    title=item["title"],
+                    title=title,
                     description=description,
-                    category=item["category"],
-                    date=datetime.fromisoformat(item["date"].replace("Z", "+00:00")),
+                    category=category,
+                    date=task_date,
                     generated_by_ai=True,
                     plan_scope=plan_scope,
                 )
@@ -144,17 +153,26 @@ class GroqAIService:
 
         tasks: list[TaskCreate] = []
         for item in parsed["tasks"]:
-            description = item["description"]
+            title = self._coerce_text(
+                item.get("title"),
+                self._default_task_title(item.get("category")),
+            )
+            description = self._coerce_text(
+                item.get("description"),
+                self._default_task_description(profile, item.get("category")),
+            )
             if len(description) > 1000:
                 description = description[:997].rstrip() + "..."
+            category = self._normalize_task_category(item.get("category"), title, description)
+            task_date = self._parse_task_date(item.get("date"), target_date)
 
             tasks.append(
                 TaskCreate(
                     profile_id=profile.id,
-                    title=item["title"],
+                    title=title,
                     description=description,
-                    category=item["category"],
-                    date=datetime.fromisoformat(item["date"].replace("Z", "+00:00")),
+                    category=category,
+                    date=task_date,
                     generated_by_ai=True,
                     plan_scope="manual",
                 )
@@ -294,3 +312,84 @@ class GroqAIService:
     def _condition_note(self, profile: Profile) -> str:
         conditions = [condition for condition in profile.medicalConditions if condition != "none"]
         return ", ".join(conditions)
+
+    def _normalize_task_category(self, raw_category: str | None, title: str, description: str) -> str:
+        normalized = (raw_category or "").strip().lower()
+        if normalized in {"workout", "diet"}:
+            return normalized
+
+        if normalized in {"meal", "meals", "nutrition", "food", "dietary", "hydration"}:
+            return "diet"
+
+        if normalized in {"exercise", "training", "strength", "cardio", "mobility"}:
+            return "workout"
+
+        content = f"{title} {description}".lower()
+        diet_keywords = {
+            "meal",
+            "meals",
+            "nutrition",
+            "protein",
+            "calorie",
+            "calories",
+            "hydrate",
+            "hydration",
+            "water",
+            "snack",
+            "breakfast",
+            "lunch",
+            "dinner",
+            "diet",
+        }
+        workout_keywords = {
+            "sets",
+            "reps",
+            "workout",
+            "exercise",
+            "training",
+            "strength",
+            "cardio",
+            "run",
+            "squat",
+            "bench",
+            "deadlift",
+            "session",
+        }
+
+        if any(keyword in content for keyword in diet_keywords):
+            return "diet"
+        if any(keyword in content for keyword in workout_keywords):
+            return "workout"
+
+        return "diet" if normalized == "recovery" else "workout"
+
+    def _coerce_text(self, value: object, fallback: str) -> str:
+        text = str(value or "").strip()
+        return text or fallback
+
+    def _parse_task_date(self, raw_date: object, fallback: datetime) -> datetime:
+        text = str(raw_date or "").strip()
+        if not text:
+            return fallback
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00"))
+        except ValueError:
+            return fallback
+
+    def _default_task_title(self, raw_category: str | None) -> str:
+        category = (raw_category or "").strip().lower()
+        if category in {"diet", "meal", "meals", "nutrition", "food", "hydration", "recovery"}:
+            return "Nutrition Plan"
+        return "Workout Plan"
+
+    def _default_task_description(self, profile: Profile, raw_category: str | None) -> str:
+        category = (raw_category or "").strip().lower()
+        if category in {"diet", "meal", "meals", "nutrition", "food", "hydration", "recovery"}:
+            return (
+                f"Follow a {profile.dietPreference} nutrition plan that supports {profile.dietaryGoal}, "
+                f"drink {profile.dailyWaterIntake}L of water, and prioritize recovery habits."
+            )
+        return (
+            f"Complete a {profile.workoutHoursPerDay:g}-hour {profile.preferredWorkoutTime} workout "
+            f"matched to a {profile.fitnessLevel} athlete working toward {profile.goal}."
+        )

@@ -65,3 +65,13 @@ class CalendarDomainService:
     def clear_tasks(self, profile_id: str) -> int:
         result = self.collection.delete_many({"profile_id": profile_id})
         return result.deleted_count
+
+    def clear_generated_tasks_by_scope(self, profile_id: str, plan_scope: str) -> int:
+        result = self.collection.delete_many(
+            {
+                "profile_id": profile_id,
+                "generated_by_ai": True,
+                "plan_scope": plan_scope,
+            }
+        )
+        return result.deleted_count

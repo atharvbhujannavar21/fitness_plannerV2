@@ -2,8 +2,7 @@
   import { onMount } from 'svelte';
   import AppShell from '$lib/components/AppShell.svelte';
   import BMICard from '$lib/components/BMICard.svelte';
-  import WorkoutCard from '$lib/components/WorkoutCard.svelte';
-  import DietCard from '$lib/components/DietCard.svelte';
+  import WeeklyPlanBoard from '$lib/components/WeeklyPlanBoard.svelte';
   import ChatbotPanel from '$lib/components/ChatbotPanel.svelte';
   import { selectedProfile } from '$lib/stores/profile';
   import { tasks } from '$lib/stores/tasks';
@@ -13,6 +12,15 @@
   let summary = '';
   let error = '';
   let weeklyTasks = [];
+  let summaryTimeout;
+
+  function showSummary(message) {
+    summary = message;
+    clearTimeout(summaryTimeout);
+    summaryTimeout = setTimeout(() => {
+      summary = '';
+    }, 3000);
+  }
 
   function toTime(value) {
     return new Date(value).getTime();
@@ -41,12 +49,29 @@
     error = '';
     try {
       const result = await api.generatePlan($selectedProfile);
-      summary = result.summary;
+      showSummary(result.summary);
       const allTasks = await api.getTasks($selectedProfile.id);
       tasks.set(allTasks);
       weeklyTasks = extractWeeklyTasks(allTasks);
     } catch (err) {
       error = err instanceof Error ? err.message : 'Unable to generate plan.';
+    } finally {
+      generating = false;
+    }
+  }
+
+  async function clearWeeklyPlan() {
+    if (!$selectedProfile) return;
+    generating = true;
+    error = '';
+    try {
+      const result = await api.clearGeneratedTasks($selectedProfile.id, 'weekly');
+      showSummary(result.deleted > 0 ? 'Weekly plan cleared from the dashboard.' : 'No weekly plan found to clear.');
+      const allTasks = await api.getTasks($selectedProfile.id);
+      tasks.set(allTasks);
+      weeklyTasks = extractWeeklyTasks(allTasks);
+    } catch (err) {
+      error = err instanceof Error ? err.message : 'Unable to clear weekly plan.';
     } finally {
       generating = false;
     }
@@ -65,12 +90,21 @@
               <p class="text-sm text-stone-400">Personalized plan</p>
               <h2 class="font-display text-4xl">Hello, {$selectedProfile.name}</h2>
               <p class="mt-2 max-w-2xl text-sm text-stone-400">
-                Generate a weekly AI workout and diet schedule tuned to your age, body metrics, and goal.
+                Generate a 7-day AI workout and nutrition plan tuned to your profile, body metrics, recovery needs, and goal.
               </p>
             </div>
-            <button class="rounded-full bg-ember px-5 py-3 font-semibold text-black" on:click={generatePlan} disabled={generating}>
-              {generating ? 'Generating...' : 'Generate AI Plan'}
-            </button>
+            <div class="flex flex-wrap gap-3">
+              <button class="rounded-full bg-ember px-5 py-3 font-semibold text-black" on:click={generatePlan} disabled={generating}>
+                {generating ? 'Generating...' : 'Generate Weekly Plan'}
+              </button>
+              <button
+                class="rounded-full border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                on:click={clearWeeklyPlan}
+                disabled={generating || weeklyTasks.length === 0}
+              >
+                Clear Weekly Plan
+              </button>
+            </div>
           </div>
 
           {#if summary}
@@ -84,8 +118,7 @@
 
         <div class="grid gap-4 lg:grid-cols-3">
           <BMICard profile={$selectedProfile} />
-          <WorkoutCard tasks={weeklyTasks} />
-          <DietCard tasks={weeklyTasks} />
+          <WeeklyPlanBoard tasks={weeklyTasks} profile={$selectedProfile} />
         </div>
       </div>
 
