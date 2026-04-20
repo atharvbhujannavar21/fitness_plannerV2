@@ -85,8 +85,10 @@
       year: viewDate.getFullYear(),
       month: viewDate.getMonth() + 1,
     });
-    tasks.set(await api.getTasks($selectedProfile.id));    selectedDate = null;
-    selectedDayOpen = false;    status = result.summary;
+    tasks.set(await api.getTasks($selectedProfile.id));
+    selectedDate = null;
+    selectedDayOpen = false;
+    status = result.summary;
   }
 
   async function removeTask(taskId) {
@@ -97,7 +99,12 @@
   }
 
   async function addNewTask() {
-    if (!$selectedProfile || !selectedDate || !newTaskTitle.trim() || !newTaskDescription.trim()) {
+    if (
+      !$selectedProfile ||
+      !selectedDate ||
+      !newTaskTitle.trim() ||
+      !newTaskDescription.trim()
+    ) {
       status = "Please fill in all fields.";
       return;
     }
@@ -116,7 +123,7 @@
 
       await api.addTask(newTask);
       tasks.set(await api.getTasks($selectedProfile.id));
-      
+
       // Reset form
       newTaskTitle = "";
       newTaskDescription = "";
@@ -453,13 +460,20 @@
             </div>
           {/if}
 
-          <details class="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4">
-            <summary class="cursor-pointer text-lg font-semibold text-stone-100 list-none outline-none transition hover:text-amber-400">
+          <details
+            class="mt-6 rounded-3xl border border-white/10 bg-black/20 p-4"
+          >
+            <summary
+              class="cursor-pointer text-lg font-semibold text-stone-100 list-none outline-none transition hover:text-amber-400"
+            >
               Add New Task
             </summary>
             <div class="mt-4 space-y-4">
               <div>
-                <label for="task-title" class="block text-sm text-stone-400 mb-2">
+                <label
+                  for="task-title"
+                  class="block text-sm text-stone-400 mb-2"
+                >
                   Task Title
                 </label>
                 <input
@@ -472,7 +486,10 @@
               </div>
 
               <div>
-                <label for="task-desc" class="block text-sm text-stone-400 mb-2">
+                <label
+                  for="task-desc"
+                  class="block text-sm text-stone-400 mb-2"
+                >
                   Description
                 </label>
                 <textarea
@@ -485,7 +502,10 @@
               </div>
 
               <div>
-                <label for="task-category" class="block text-sm text-stone-400 mb-2">
+                <label
+                  for="task-category"
+                  class="block text-sm text-stone-400 mb-2"
+                >
                   Category
                 </label>
                 <select
